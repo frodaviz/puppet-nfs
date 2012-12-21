@@ -25,18 +25,17 @@ define nfs::mount($ensure=present,
 
   case $ensure {
     present: {
-      exec {"create ${mountpoint} and parents":
-        command => "mkdir -p ${mountpoint}",
-        unless  => "test -d ${mountpoint}",
+      file { "${mountpoint}":
+        ensure  => directory,
       }
       Mount["shared $share by $server"] {
-        require => [Exec["create ${mountpoint} and parents"], Class["nfs::client"]],
+        require => [File["${mountpoint}"], Class["nfs::client"]],
         ensure  => mounted,
       }
     }
 
     absent: {
-      file { $mountpoint:
+      file { "$mountpoint":
         ensure  => absent,
         require => Mount["shared $share by $server"],
       }

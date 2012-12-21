@@ -3,6 +3,20 @@ define nfs::export ($ensure=present,
                     $options="",
                     $guest) {
 
+  include concat::setup
+
+#  concat { '/etc/exports':
+#    owner   => 'root',
+#    group   => 'root',
+#    mode    => '0644',
+#  }
+
+  file { "$share":
+    ensure => 'directory',
+    owner => 'nfsnobody',
+    group => 'nfsnobody',
+  }
+
   $concatshare = regsubst($share, '/', '-', 'G')
   $concatguest = regsubst($guest, '/','-', 'G')
  
@@ -11,11 +25,16 @@ define nfs::export ($ensure=present,
   } else {
     $content = "${share}     ${guest}($options)\n"
   }
-  
+
   concat::fragment {"${concatshare}-on-${concatguest}":
-    ensure  => $ensure,
-    content => $content,
+    order   => '10',
+    content => "$content",
     target  => '/etc/exports',
+    require => File["$share"],
   }
 
+  
+
 }
+
+
